@@ -134,12 +134,14 @@ const Salons = () => {
                     {distance} km away
                   </p>
                 )}
+
                 <Link
-                  to={`/salons/${salon._id}`}
-                  className="inline-block mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-                >
-                  Book Appointment
+                to={`/salons/${salon._id}/book`}
+                className="inline-block mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+                  >
+                  Book Now
                 </Link>
+
               </div>
             );
           })}

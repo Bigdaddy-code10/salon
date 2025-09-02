@@ -1,15 +1,18 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import API from "../utils/api";
+import API from "../utils/api"; // axios instance with token interceptor
+import { toast } from "react-toastify";
 
 const BookAppointment = () => {
   const { salonId } = useParams();
   const navigate = useNavigate();
 
   const [salon, setSalon] = useState(null);
-  const [form, setForm] = useState({ date: "", time: "" });
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchSalon = async () => {
@@ -17,57 +20,95 @@ const BookAppointment = () => {
         const res = await API.get(`/salons/${salonId}`);
         setSalon(res.data);
       } catch (err) {
-        setError("Failed to load salon");
+        console.error("Failed to fetch salon", err);
+        toast.error("Failed to load salon info");
+      } finally {
+        setLoading(false);
       }
     };
+
     fetchSalon();
   }, [salonId]);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+
+    if (!date || !time) {
+      toast.error("Please select both date and time");
+      return;
+    }
+
+    setSubmitting(true);
+
     try {
-      const res = await API.post("/appointments", {
+      await API.post("/appointments", {
         salon: salonId,
-        date: form.date,
-        time: form.time,
+        date,
+        time,
       });
-      setSuccess("Appointment booked!");
-      setTimeout(() => navigate("/appointments"), 1500);
+
+      toast.success("Appointment booked successfully!");
+      navigate("/appointments");
     } catch (err) {
-      setError("Failed to book appointment");
+      console.error("Failed to book appointment", err);
+      const msg =
+        err.response?.data?.message || "Booking failed. Please try again.";
+      toast.error(msg);
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  if (!salon) return <p>Loading salon...</p>;
+  if (loading)
+    return <p className="text-center mt-10 text-gray-600">Loading salon info...</p>;
+
+  if (!salon)
+    return <p className="text-center mt-10 text-red-500">Salon not found.</p>;
 
   return (
-    <div className="container">
-      <h2>Book Appointment at {salon.name}</h2>
-      <p>{salon.address}</p>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="date"
-          name="date"
-          value={form.date}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="time"
-          name="time"
-          value={form.time}
-          onChange={handleChange}
-          required
-        />
-        <button type="submit">Book Appointment</button>
+    <div className="max-w-xl mx-auto p-6 mt-10 bg-white dark:bg-gray-800 rounded shadow">
+      <h2 className="text-2xl font-bold mb-4 text-center">{salon.name}</h2>
+      <p className="text-gray-600 dark:text-gray-400 text-center mb-6">
+        {salon.address}
+      </p>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block mb-1 font-medium" htmlFor="date">
+            Select Date
+          </label>
+          <input
+            id="date"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block mb-1 font-medium" htmlFor="time">
+            Select Time
+          </label>
+          <input
+            id="time"
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+            required
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={submitting}
+          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+        >
+          {submitting ? "Booking..." : "Book Appointment"}
+        </button>
       </form>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {success && <p style={{ color: "green" }}>{success}</p>}
     </div>
   );
 };

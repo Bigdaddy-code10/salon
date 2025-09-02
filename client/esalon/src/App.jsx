@@ -8,9 +8,11 @@ import Home from "./pages/Home";
 import Salons from "./pages/Salons";
 import Profile from "./pages/Profile";
 import MyAppointments from "./pages/MyAppointments";
+import AdminSalons from "./pages/AdminSalons";
+import BookAppointment from "./pages/BookAppointment"; // ✅ NEW IMPORT
+
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import AdminSalons from "./pages/AdminSalons";
 
 import "./App.css";
 
@@ -32,6 +34,16 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/salons/:salonId/book"
+            element={
+              <ProtectedRoute>
+                <BookAppointment />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/appointments"
             element={
@@ -48,7 +60,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/admin/salons"
             element={

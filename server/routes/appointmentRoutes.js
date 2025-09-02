@@ -8,23 +8,21 @@ const router = express.Router();
 
 // ✅ Book an appointment
 router.post("/", protect, async (req, res) => {
-  const { salonId, date, time } = req.body;
+  const { salon, date, time } = req.body;
 
-  try {
-    const salon = await Salon.findById(salonId);
-    if (!salon) return res.status(404).json({ message: "Salon not found" });
-
-    const appointment = await Appointment.create({
-      user: req.user._id,
-      salon: salonId,
-      date,
-      time,
-    });
-
-    res.status(201).json(appointment);
-  } catch (err) {
-    res.status(500).json({ message: "Failed to book", error: err.message });
+  if (!salon || !date || !time) {
+    return res.status(400).json({ message: "All fields are required" });
   }
+
+  const newAppointment = new Appointment({
+    user: req.user._id,
+    salon,
+    date,
+    time
+  });
+
+  const saved = await newAppointment.save();
+  res.status(201).json(saved);
 });
 
 // ✅ Get appointments: user sees own, admin sees all
@@ -133,5 +131,7 @@ router.get("/grouped", protect, async (req, res) => {
     });
   }
 });
+
+
 
 export default router;
